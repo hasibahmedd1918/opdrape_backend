@@ -1,0 +1,306 @@
+# OpDrape E-Commerce API Documentation
+
+Base URL: localhost:8000/api
+
+## Authentication
+All protected routes require JWT token in header:
+Authorization: Bearer <jwt_token>
+
+## 1. User Endpoints
+
+### Authentication
+POST /users/register
+Request:
+{
+    "name": "string",
+    "email": "string",
+    "password": "string",
+    "phone": "string"
+}
+Response: {
+    "user": {
+        "id": "string",
+        "name": "string",
+        "email": "string"
+    },
+    "token": "string"
+}
+
+Request:
+{
+    "email": "string",
+    "password": "string"
+}
+Response: Same as register
+
+### Password Management
+POST /users/forgot-password
+Request:
+{
+    "email": "string"
+}
+Response:
+{
+    "message": "Password reset link sent to email"
+}
+
+POST /users/reset-password
+Request:
+{
+    "token": "string",
+    "newPassword": "string"
+}
+Response:
+{
+    "message": "Password successfully reset"
+}
+
+### Profile Management
+GET /users/profile
+Response:
+{
+    "id": "string",
+    "name": "string",
+    "email": "string",
+    "phone": "string",
+    "address": {
+        "street": "string",
+        "city": "string",
+        "state": "string",
+        "zipCode": "string",
+        "country": "string"
+    },
+    "wishlist": [Product],
+    "cart": [{
+        "product": Product,
+        "quantity": number
+    }]
+}
+
+PATCH /users/profile
+Request:
+{
+    "name": "string",
+    "email": "string",
+    "phone": "string",
+    "address": {
+        "street": "string",
+        "city": "string",
+        "state": "string",
+        "zipCode": "string",
+        "country": "string"
+    }
+}
+
+### Shopping Features
+POST /users/cart
+Request:
+{
+    "productId": "string",
+    "quantity": number
+}
+
+DELETE /users/cart/:productId
+
+POST /users/wishlist/:productId
+
+DELETE /users/wishlist/:productId
+
+GET /users/orders
+Response:
+[{
+    "id": "string",
+    "items": [{
+        "product": Product,
+        "quantity": number,
+        "price": number
+    }],
+    "totalAmount": number,
+    "status": "pending" | "processing" | "shipped" | "delivered" | "cancelled",
+    "shippingAddress": Address,
+    "paymentStatus": "pending" | "completed" | "failed",
+    "createdAt": "date"
+}]
+
+## 2. Admin Endpoints
+
+### Dashboard
+GET /admin/dashboard
+Response:
+{
+    "totalUsers": number,
+    "totalOrders": number,
+    "totalRevenue": number,
+    "recentOrders": [Order]
+}
+
+### Product Management
+POST /admin/products
+Request:
+{
+    "name": "string",
+    "description": "string",
+    "category": "men" | "women" | "kids" | "accessories",
+    "subCategory": "t-shirts" | "shirts" | "pants" | "jeans" | etc,
+    "brand": "string",
+    "basePrice": number,
+    "salePrice": number,
+    "colorVariants": [{
+        "color": {
+            "name": "string",
+            "hexCode": "#000000"
+        },
+        "images": [{
+            "url": "string",
+            "alt": "string"
+        }],
+        "sizes": [{
+            "name": "XS" | "S" | "M" | "L" | "XL" | "XXL" | "3XL",
+            "quantity": number
+        }]
+    }],
+    "features": ["string"],
+    "material": "string",
+    "careInstructions": ["string"],
+    "tags": ["string"],
+    "displayPage": "home" | "featured" | "new-arrivals" | "best-sellers" | "sale",
+    "metadata": {
+        "isNewArrival": boolean,
+        "isBestSeller": boolean,
+        "isSale": boolean,
+        "salePercentage": number
+    }
+}
+
+PATCH /admin/products/:productId
+Request: Same as POST but fields are optional
+
+DELETE /admin/products/:productId
+
+PATCH /admin/products/:productId/inventory
+Request:
+{
+    "colorId": "string",
+    "sizeUpdates": [{
+        "name": "string",
+        "quantity": number
+    }]
+}
+
+GET /admin/products/low-stock
+
+### Order Management
+PATCH /admin/orders/:orderId/status
+Request:
+{
+    "status": "pending" | "processing" | "shipped" | "delivered" | "cancelled"
+}
+
+### Promotion Management
+POST /admin/promotions
+Request:
+{
+    "code": "string",
+    "type": "percentage" | "fixed",
+    "value": number,
+    "startDate": "date",
+    "endDate": "date",
+    "minimumPurchase": number,
+    "maxUses": number
+}
+
+GET /admin/promotions
+
+### Reports
+GET /admin/reports/sales
+Query Parameters:
+- startDate: ISO date string
+- endDate: ISO date string
+
+GET /admin/reports/inventory
+
+### Message Management
+GET /admin/messages
+
+POST /admin/messages/:messageId/reply
+Request:
+{
+    "reply": "string"
+}
+
+## Models
+
+### Product
+{
+    "id": "string",
+    "name": "string",
+    "description": "string",
+    "category": "string",
+    "subCategory": "string",
+    "brand": "string",
+    "basePrice": number,
+    "salePrice": number,
+    "colorVariants": [{
+        "color": {
+            "name": "string",
+            "hexCode": "string"
+        },
+        "images": [{
+            "url": "string",
+            "alt": "string"
+        }],
+        "sizes": [{
+            "name": "string",
+            "quantity": number
+        }]
+    }],
+    "features": ["string"],
+    "material": "string",
+    "careInstructions": ["string"],
+    "tags": ["string"],
+    "ratings": [{
+        "user": User,
+        "rating": number,
+        "review": "string",
+        "images": [{
+            "url": "string",
+            "alt": "string"
+        }],
+        "createdAt": "date"
+    }],
+    "averageRating": number,
+    "totalReviews": number,
+    "displayPage": "string",
+    "isActive": boolean,
+    "metadata": {
+        "isNewArrival": boolean,
+        "isBestSeller": boolean,
+        "isSale": boolean,
+        "salePercentage": number
+    }
+}
+
+## Error Responses
+All endpoints may return these error responses:
+{
+    "error": "Error message"
+}
+
+Status Codes:
+- 200: Success
+- 201: Created
+- 400: Bad Request
+- 401: Unauthorized
+- 403: Forbidden
+- 404: Not Found
+- 500: Server Error
+
+## Notes for Frontend Implementation:
+1. Always include JWT token in protected route headers
+2. Handle image uploads separately
+3. Implement proper form validation
+4. Cache frequently accessed data
+5. Implement proper error handling
+6. Use proper loading states for async operations
+7. Implement proper state management for cart/wishlist
+8. Handle token expiration and refresh 

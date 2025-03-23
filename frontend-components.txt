@@ -1,0 +1,101 @@
+# Frontend Component Structure for E-commerce Application
+
+## User-Facing Components
+
+### Layout Components
+- Navbar - Main navigation with links to categories, search, cart, and account
+- Footer - Site information, links, newsletter signup
+- Layout - Main wrapper component that includes Navbar and Footer
+
+### Authentication Components
+- LoginForm - For user authentication
+- RegisterForm - For new user registration
+- ForgotPasswordForm - Password recovery
+- UserProfile - Display and edit user information
+
+### Product Components
+- ProductCard - Displays a single product in listings
+- ProductGrid - Grid of ProductCards for category pages
+- ProductDetail - Full product page with all details
+- ColorVariantSelector - For selecting product colors
+- SizeSelector - For selecting product sizes
+- ProductImages - Image gallery/carousel for product images
+- ProductReviews - Display and submission of product reviews
+- ProductRating - Star rating display and input
+- RelatedProducts - Shows related items
+
+### Shopping Components
+- ShoppingCart - Cart summary and checkout process
+- CartItem - Individual items in the cart
+- Checkout - Multi-step checkout process
+- PaymentForm - Payment method selection and input
+- ShippingForm - Shipping address and method selection
+- OrderSummary - Summary of order before completion
+- OrderConfirmation - Post-purchase confirmation
+- OrderHistory - List of past orders
+
+### Browsing Components
+- CategoryPage - View products by category
+- SubCategoryFilter - Filter for product subcategories
+- SearchResults - Display search results
+- Filters - Price, brand, color, size filters
+- SortingOptions - Sort products by price, popularity, etc.
+- Pagination - Navigate through multiple pages of products
+- FeaturedProducts - Showcase for home page
+
+## Admin Components
+
+### Admin Layout
+- AdminLayout - Base layout for admin pages
+- AdminSidebar - Navigation for admin functions
+- AdminHeader - Admin panel header with user info
+
+### Product Management
+- AdminProductList - Table/list of all products
+- AdminProductForm - Form for creating/editing products
+- ProductImageUploader - Component for uploading product images
+- ColorVariantManager - Manage multiple color variants
+- SizeInventoryManager - Manage sizes and inventory
+- ProductMetadataForm - Form for product flags and metadata
+
+### Orders & Customers
+- AdminOrderList - Table of all orders
+- AdminOrderDetail - Detailed view of a single order
+- CustomerList - Table of all customers
+- CustomerDetail - Detailed view of customer information
+
+### Dashboard Components
+- AdminDashboard - Overview with key metrics
+- SalesChart - Graph of sales data
+- InventoryStatus - Overview of inventory levels
+- RecentOrders - List of most recent orders
+- TopSellingProducts - List of best-selling products
+
+### Common Admin Components
+- DataTable - Reusable table component for admin lists
+- AdminSearchFilter - Search and filtering for admin tables
+- ActionButtons - Edit/Delete/View buttons for table rows
+- ConfirmationModal - For confirming deletions
+- Notification - Success/error notifications
+
+## Utility Components
+- Loader - Loading indicator
+- ErrorBoundary - For handling component errors
+- EmptyState - Display when no data is available
+- Breadcrumbs - Navigation breadcrumbs
+- Toast - Notification toast messages
+- Modal - Reusable modal component
+
+## Pages (Container Components)
+- HomePage
+- CategoryPage
+- ProductPage
+- CartPage
+- CheckoutPage
+- OrderConfirmationPage
+- AccountPage
+- WishlistPage
+- AdminProductsPage
+- AdminOrdersPage
+- AdminCustomersPage
+- AdminDashboardPage 

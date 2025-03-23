@@ -1,0 +1,273 @@
+# Frontend Components with Verified API Endpoints
+
+## User-Facing Components
+
+### Layout Components
+- **Navbar**
+  - ✅ GET `/api/users/profile` - Get logged-in user data
+  - ⚠️ GET `/api/products/categories` - Get all product categories (needs implementation)
+
+- **Footer**
+  - No specific API endpoints required
+
+- **Layout**
+  - No specific API endpoints required
+
+### Authentication Components
+- **LoginForm**
+  - ✅ POST `/api/users/login` - Log in existing user
+
+- **RegisterForm**
+  - ✅ POST `/api/users/register` - Register new user
+
+- **ForgotPasswordForm**
+  - ✅ POST `/api/users/forgot-password` - Request password reset email
+
+- **UserProfile**
+  - ✅ GET `/api/users/profile` - Get user profile data
+  - ✅ PUT `/api/users/profile` - Update user profile
+  - ✅ GET `/api/users/orders` - Get user's order history
+
+### Product Components
+- **ProductCard**
+  - No direct API calls (displays data from parent components)
+
+- **ProductGrid**
+  - ✅ GET `/api/products` - Get all products
+  - ✅ GET `/api/products/category/:category` - Get products by category
+  - ✅ GET `/api/products/search` - Search products by keywords
+
+- **ProductDetail**
+  - ✅ GET `/api/products/:id` - Get detailed product information
+  - ✅ POST `/api/users/wishlist/:productId` - Add product to wishlist
+  - ✅ DELETE `/api/users/wishlist/:productId` - Remove product from wishlist
+  - ⚠️ POST `/api/products/:id/reviews` - Submit a product review (needs implementation)
+
+- **ColorVariantSelector**
+  - No direct API calls (uses data from ProductDetail)
+
+- **SizeSelector**
+  - No direct API calls (uses data from ProductDetail)
+
+- **ProductImages**
+  - No direct API calls (uses data from ProductDetail)
+
+- **ProductReviews**
+  - ⚠️ GET `/api/products/:id/reviews` - Get product reviews (needs implementation)
+  - ⚠️ POST `/api/products/:id/reviews` - Submit a new review (needs implementation)
+
+- **ProductRating**
+  - No direct API calls (uses data from ProductReviews)
+
+- **RelatedProducts**
+  - ⚠️ GET `/api/products/related/:productId` - Get related products (needs implementation)
+
+### Shopping Components
+- **ShoppingCart**
+  - ✅ GET `/api/users/cart` - Get cart contents (via user profile)
+  - ✅ POST `/api/orders` - Create a new order from cart
+
+- **CartItem**
+  - ✅ POST `/api/users/cart` - Add item to cart
+  - ✅ DELETE `/api/users/cart/:productId` - Remove item from cart
+  - ⚠️ PUT `/api/users/cart/:productId` - Update item quantity (needs implementation)
+
+- **Checkout**
+  - ✅ POST `/api/orders` - Create a new order
+  - ✅ GET `/api/users/profile` - Get user shipping information
+
+- **PaymentForm**
+  - ⚠️ POST `/api/payment/process` - Process payment (needs implementation)
+
+- **ShippingForm**
+  - ✅ PUT `/api/users/profile` - Update shipping information
+  - ⚠️ GET `/api/shipping/rates` - Get shipping rate options (needs implementation)
+
+- **OrderSummary**
+  - ✅ GET `/api/users/cart` - Get cart contents (via user profile)
+
+- **OrderConfirmation**
+  - ✅ GET `/api/orders/:id` - Get order details
+
+- **OrderHistory**
+  - ✅ GET `/api/users/orders` - Get user's order history
+
+### Browsing Components
+- **CategoryPage**
+  - ✅ GET `/api/products/category/:category` - Get products by category
+
+- **SubCategoryFilter**
+  - ⚠️ GET `/api/categories` - Get all categories and subcategories (needs implementation)
+
+- **SearchResults**
+  - ✅ GET `/api/products/search` - Search products
+
+- **Filters**
+  - ⚠️ GET `/api/products/filters` - Get available filter options (needs implementation)
+
+- **SortingOptions**
+  - No direct API calls (modifies parameters to product endpoints)
+
+- **Pagination**
+  - No direct API calls (modifies parameters to product endpoints)
+
+- **FeaturedProducts**
+  - ✅ GET `/api/products?displayPage=featured` - Parameter supported in product model
+  - ✅ GET `/api/products?displayPage=new-arrivals` - Parameter supported in product model
+  - ✅ GET `/api/products?displayPage=best-sellers` - Parameter supported in product model
+
+## Admin Components
+
+### Admin Layout
+- **AdminLayout**
+  - No specific API endpoints required
+
+- **AdminSidebar**
+  - No specific API endpoints required
+
+- **AdminHeader**
+  - ✅ GET `/api/users/profile` - Get admin user data
+
+### Product Management
+- **AdminProductList**
+  - ✅ GET `/api/admin/products` - Get all products (admin view)
+  - ✅ DELETE `/api/admin/products/:id` - Delete a product
+
+- **AdminProductForm**
+  - ✅ POST `/api/admin/products` - Create a new product
+  - ⚠️ PUT `/api/admin/products/:id` - Update a product (needs implementation)
+
+- **ProductImageUploader**
+  - ⚠️ POST `/api/upload` - Upload product images (needs implementation)
+
+- **ColorVariantManager**
+  - No direct API calls (part of AdminProductForm)
+
+- **SizeInventoryManager**
+  - No direct API calls (part of AdminProductForm)
+
+- **ProductMetadataForm**
+  - No direct API calls (part of AdminProductForm)
+
+### Orders & Customers
+- **AdminOrderList**
+  - ⚠️ GET `/api/admin/orders` - Get all orders (needs implementation)
+
+- **AdminOrderDetail**
+  - ⚠️ GET `/api/admin/orders/:id` - Get order details (needs implementation)
+  - ✅ PUT `/api/admin/orders/:id/status` - Update order status
+
+- **CustomerList**
+  - ✅ GET `/api/admin/users` - Get all users/customers
+
+- **CustomerDetail**
+  - ⚠️ GET `/api/admin/users/:id` - Get user details (needs implementation)
+  - ⚠️ PUT `/api/admin/users/:id` - Update user information (needs implementation)
+
+### Dashboard Components
+- **AdminDashboard**
+  - ✅ GET `/api/admin/dashboard/stats` - Get dashboard statistics
+
+- **SalesChart**
+  - ⚠️ GET `/api/admin/reports/sales` - Get sales data for charts (needs implementation)
+
+- **InventoryStatus**
+  - ✅ GET `/api/admin/reports/inventory` - Get inventory status
+
+- **RecentOrders**
+  - ✅ GET `/api/admin/orders?limit=5&sort=recent` - Get recent orders (via dashboard)
+
+- **TopSellingProducts**
+  - ⚠️ GET `/api/admin/reports/products?sortBy=sales` - Get top selling products (partially implemented)
+
+### Common Admin Components
+- **DataTable**
+  - No direct API calls (used by other components)
+
+- **AdminSearchFilter**
+  - No direct API calls (used by other components)
+
+- **ActionButtons**
+  - No direct API calls (used by other components)
+
+- **ConfirmationModal**
+  - No direct API calls (used by other components)
+
+- **Notification**
+  - No direct API calls (used by other components)
+
+## Utility Components
+- **Loader**
+  - No API endpoints required
+
+- **ErrorBoundary**
+  - No API endpoints required
+
+- **EmptyState**
+  - No API endpoints required
+
+- **Breadcrumbs**
+  - No API endpoints required
+
+- **Toast**
+  - No API endpoints required
+
+- **Modal**
+  - No API endpoints required
+
+## Pages (Container Components)
+- **HomePage**
+  - ✅ GET `/api/products?displayPage=home` - Parameter supported in product model
+  - ✅ GET `/api/products?displayPage=featured` - Parameter supported in product model
+  - ✅ GET `/api/products?displayPage=new-arrivals` - Parameter supported in product model
+
+- **CategoryPage**
+  - ✅ GET `/api/products/category/:category` - Get products by category
+  - ⚠️ GET `/api/categories` - Get category details (needs implementation)
+
+- **ProductPage**
+  - ✅ GET `/api/products/:id` - Get product details
+  - ⚠️ GET `/api/products/:id/reviews` - Get product reviews (needs implementation)
+  - ⚠️ GET `/api/products/related/:productId` - Get related products (needs implementation)
+
+- **CartPage**
+  - ✅ GET `/api/users/cart` - Get cart contents (via user profile)
+  - ✅ DELETE `/api/users/cart/:productId` - Remove item from cart
+  - ⚠️ PUT `/api/users/cart/:productId` - Update item quantity (needs implementation)
+
+- **CheckoutPage**
+  - ✅ POST `/api/orders` - Create a new order
+  - ⚠️ GET `/api/payment/methods` - Get available payment methods (needs implementation)
+  - ⚠️ POST `/api/payment/process` - Process payment (needs implementation)
+
+- **OrderConfirmationPage**
+  - ✅ GET `/api/orders/:id` - Get order details
+
+- **AccountPage**
+  - ✅ GET `/api/users/profile` - Get user profile
+  - ✅ PUT `/api/users/profile` - Update user profile
+  - ✅ GET `/api/users/orders` - Get order history
+
+- **WishlistPage**
+  - ✅ GET `/api/users/wishlist` - Get wishlist products (via user profile)
+  - ✅ DELETE `/api/users/wishlist/:productId` - Remove from wishlist
+
+- **AdminProductsPage**
+  - ✅ GET `/api/admin/products` - Get all products
+  - ✅ POST `/api/admin/products` - Create a new product
+  - ⚠️ PUT `/api/admin/products/:id` - Update a product (needs implementation)
+  - ✅ DELETE `/api/admin/products/:id` - Delete a product
+
+- **AdminOrdersPage**
+  - ⚠️ GET `/api/admin/orders` - Get all orders (needs implementation)
+  - ✅ PUT `/api/admin/orders/:id/status` - Update order status
+
+- **AdminCustomersPage**
+  - ✅ GET `/api/admin/users` - Get all users
+  - ⚠️ PUT `/api/admin/users/:id` - Update user information (needs implementation)
+  - ⚠️ DELETE `/api/admin/users/:id` - Delete a user (needs implementation)
+
+- **AdminDashboardPage**
+  - ✅ GET `/api/admin/dashboard/stats` - Get dashboard statistics
+  - ⚠️ GET `/api/admin/reports/sales` - Get sales data (needs implementation)
+  - ✅ GET `/api/admin/reports/inventory` - Get inventory data 

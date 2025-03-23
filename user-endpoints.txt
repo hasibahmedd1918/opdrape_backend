@@ -1,0 +1,280 @@
+OPDRAPE USER API DOCUMENTATION
+==============================
+
+Base URL: http://localhost:8000/api
+
+AUTHENTICATION
+-------------
+POST /users/register
+- Description: Register a new user
+- Request Body:
+  ```json
+  {
+    "name": "John Doe",
+    "email": "john@example.com",
+    "password": "password123",
+    "phone": "1234567890"
+  }
+  ```
+- Response:
+  ```json
+  {
+    "user": {
+      "id": "user_id",
+      "name": "John Doe",
+      "email": "john@example.com",
+      "role": "user"
+    },
+    "token": "JWT_TOKEN"
+  }
+  ```
+
+POST /users/login
+- Description: Login a user
+- Request Body:
+  ```json
+  {
+    "email": "john@example.com",
+    "password": "password123"
+  }
+  ```
+- Response:
+  ```json
+  {
+    "user": {
+      "id": "user_id",
+      "name": "John Doe",
+      "email": "john@example.com",
+      "role": "user"
+    },
+    "token": "JWT_TOKEN"
+  }
+  ```
+
+POST /users/verify-email
+- Description: Verify user email
+- Request Body:
+  ```json
+  {
+    "token": "VERIFICATION_TOKEN"
+  }
+  ```
+- Response:
+  ```json
+  {
+    "message": "Email verified successfully"
+  }
+  ```
+
+POST /users/resend-verification
+- Description: Resend verification email
+- Authentication: Required
+- Response:
+  ```json
+  {
+    "message": "Verification email sent successfully"
+  }
+  ```
+
+POST /users/forgot-password
+- Description: Request password reset
+- Request Body:
+  ```json
+  {
+    "email": "john@example.com"
+  }
+  ```
+- Response:
+  ```json
+  {
+    "message": "Password reset link sent to email"
+  }
+  ```
+
+POST /users/reset-password
+- Description: Reset password
+- Request Body:
+  ```json
+  {
+    "token": "RESET_TOKEN",
+    "newPassword": "newpassword123"
+  }
+  ```
+- Response:
+  ```json
+  {
+    "message": "Password successfully reset"
+  }
+  ```
+
+USER PROFILE
+-----------
+GET /users/profile
+- Description: Get user profile
+- Authentication: Required
+- Response: User object (without password)
+
+PUT /users/profile
+- Description: Update user profile
+- Authentication: Required
+- Request Body:
+  ```json
+  {
+    "name": "John Smith",
+    "phone": "9876543210",
+    "address": {
+      "street": "123 Main St",
+      "city": "New York",
+      "state": "NY",
+      "zipCode": "10001",
+      "country": "USA"
+    }
+  }
+  ```
+- Response: Updated user object
+
+ORDERS
+------
+GET /users/orders
+- Description: Get user's orders
+- Authentication: Required
+- Response: Array of order objects
+
+WISHLIST
+--------
+POST /users/wishlist/:productId
+- Description: Add product to wishlist
+- Authentication: Required
+- Response: Updated wishlist array
+
+DELETE /users/wishlist/:productId
+- Description: Remove product from wishlist
+- Authentication: Required
+- Response: Updated wishlist array
+
+CART
+----
+POST /users/cart
+- Description: Add product to cart
+- Authentication: Required
+- Request Body:
+  ```json
+  {
+    "productId": "product_id",
+    "quantity": 1
+  }
+  ```
+- Response: Updated cart array
+
+DELETE /users/cart/:productId
+- Description: Remove product from cart
+- Authentication: Required
+- Response: Updated cart array
+
+PRODUCTS
+--------
+GET /products
+- Description: Get all products
+- Query Parameters:
+  - page: Page number (default: 1)
+  - limit: Items per page (default: 10)
+  - sort: Sort field
+  - category: Filter by category
+- Response:
+  ```json
+  {
+    "products": [
+      {
+        "_id": "product_id",
+        "name": "Product Name",
+        "description": "Product description",
+        "price": 99.99,
+        "category": "category_id",
+        "stock": 100,
+        "images": [
+          {
+            "url": "image_url",
+            "alt": "Image description"
+          }
+        ]
+      }
+    ],
+    "totalPages": 5,
+    "currentPage": 1
+  }
+  ```
+
+GET /products/:id
+- Description: Get product by ID
+- Response: Product object
+
+GET /products/category/:category
+- Description: Get products by category
+- Response: Array of product objects
+
+GET /products/search
+- Description: Search products
+- Query Parameters:
+  - q: Search query
+  - category: Filter by category
+  - minPrice: Minimum price
+  - maxPrice: Maximum price
+- Response: Array of product objects
+
+ORDERS
+------
+POST /orders
+- Description: Create a new order
+- Authentication: Required
+- Request Body:
+  ```json
+  {
+    "items": [
+      {
+        "product": "product_id",
+        "quantity": 2
+      }
+    ],
+    "shippingAddress": {
+      "street": "123 Main St",
+      "city": "New York",
+      "state": "NY",
+      "zipCode": "10001",
+      "country": "USA"
+    },
+    "paymentMethod": "credit_card"
+  }
+  ```
+- Response: Created order object
+
+GET /orders
+- Description: Get all orders for the authenticated user
+- Authentication: Required
+- Response: Array of order objects
+
+GET /orders/:id
+- Description: Get order by ID
+- Authentication: Required
+- Response: Order object
+
+POST /orders/:id/cancel
+- Description: Cancel an order
+- Authentication: Required
+- Response: Updated order object
+
+MESSAGES
+--------
+POST /messages
+- Description: Send a message to admin
+- Authentication: Required
+- Request Body:
+  ```json
+  {
+    "subject": "Product Inquiry",
+    "content": "I have a question about a product",
+    "category": "product",
+    "priority": "medium",
+    "orderReference": "order_id" // Optional
+  }
+  ```
+- Response: Created message object 
