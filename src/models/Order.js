@@ -20,6 +20,28 @@ const orderSchema = new mongoose.Schema({
     price: {
       type: Number,
       required: true
+    },
+    colorVariant: {
+      color: {
+        name: String,
+        hexCode: String
+      },
+      images: [{
+        url: String,
+        alt: String
+      }]
+    },
+    size: {
+      name: {
+        type: String,
+        enum: ['XS', 'S', 'M', 'L', 'XL', 'XXL', '3XL'],
+        required: true
+      },
+      quantity: {
+        type: Number,
+        required: true,
+        min: 1
+      }
     }
   }],
   totalAmount: {

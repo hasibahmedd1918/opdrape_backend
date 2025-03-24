@@ -3,6 +3,7 @@ const Order = require('../models/Order');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const Product = require('../models/Product');
+const generateToken = require('../utils/token');
 
 const userController = {
   // Register new user
@@ -191,11 +192,35 @@ const userController = {
   // Remove from cart
   async removeFromCart(req, res) {
     try {
+      const userId = req.user._id;
+      const productId = req.params.productId;
+      
+      // 1. Remove from User model cart array
       const user = req.user;
       user.cart = user.cart.filter(item => 
-        item.product.toString() !== req.params.productId
+        item.product.toString() !== productId
       );
       await user.save();
+      
+      // 2. Also remove from Cart model
+      const Cart = require('../models/Cart');
+      const cart = await Cart.findOne({ user: userId });
+      
+      if (cart) {
+        // Remove all items with this product ID (regardless of color/size)
+        cart.items = cart.items.filter(item => 
+          item.product.toString() !== productId
+        );
+        
+        // Recalculate totals
+        cart.totalItems = cart.items.reduce((total, item) => total + item.size.quantity, 0);
+        cart.totalAmount = cart.items.reduce((total, item) => 
+          total + (item.price * item.size.quantity), 0
+        );
+        
+        await cart.save();
+      }
+      
       res.json(user.cart);
     } catch (error) {
       res.status(400).json({ error: error.message });
@@ -280,8 +305,49 @@ const userController = {
   // Get cart contents
   async getCart(req, res) {
     try {
-      // Get user cart with full product details (don't limit fields)
-      const user = await User.findById(req.user._id)
+      const userId = req.user._id;
+      const Cart = require('../models/Cart');
+      
+      // Try to get the cart from the Cart model first
+      let cart = await Cart.findOne({ user: userId })
+        .populate({
+          path: 'items.product',
+          select: 'name images colorVariants price basePrice salePrice category description'
+        });
+      
+      // If cart exists in Cart collection, format and return it
+      if (cart && cart.items.length > 0) {
+        const formattedItems = cart.items.map(item => {
+          const product = item.product;
+          
+          // The product details with necessary fields
+          const productData = product.toObject ? product.toObject() : {...product};
+          
+          // Add image separately from colorVariant
+          const imageUrl = item.colorVariant && item.colorVariant.images && 
+            item.colorVariant.images.length > 0 ? item.colorVariant.images[0].url : null;
+          
+          productData.image = imageUrl;
+          
+          return {
+            _id: item._id,
+            product: productData,
+            colorVariant: item.colorVariant,
+            size: item.size,
+            quantity: item.size.quantity,
+            subtotal: item.price * item.size.quantity
+          };
+        });
+        
+        return res.json({
+          items: formattedItems,
+          totalItems: cart.totalItems,
+          cartTotal: cart.totalAmount
+        });
+      }
+      
+      // Fallback to user's embedded cart if Cart model has no items
+      const user = await User.findById(userId)
         .populate({
           path: 'cart.product'
         });

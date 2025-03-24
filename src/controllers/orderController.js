@@ -30,7 +30,7 @@ const orderController = {
                 }
             }
             
-            // Calculate total amount
+            // Calculate total amount and validate items
             let totalAmount = 0;
             for (const item of items) {
                 const product = await Product.findById(item.product).lean();
@@ -38,10 +38,39 @@ const orderController = {
                     return res.status(404).json({ error: `Product ${item.product} not found` });
                 }
                 
-                // Verify product has required data (colorVariants)
-                if (!product.colorVariants || product.colorVariants.length === 0) {
+                // Validate color variant and size
+                if (!item.colorVariant || !item.size) {
                     return res.status(400).json({ 
-                        error: `Product ${product.name || product._id} has incomplete data (missing color variants)` 
+                        error: `Color variant and size are required for product ${product.name}` 
+                    });
+                }
+
+                // Find the matching color variant
+                const colorVariant = product.colorVariants.find(
+                    variant => variant.color.name === item.colorVariant.color.name
+                );
+
+                if (!colorVariant) {
+                    return res.status(400).json({ 
+                        error: `Color variant "${item.colorVariant.color.name}" not found for product ${product.name}` 
+                    });
+                }
+
+                // Find the matching size in the color variant
+                const size = colorVariant.sizes.find(
+                    s => s.name === item.size.name
+                );
+
+                if (!size) {
+                    return res.status(400).json({ 
+                        error: `Size "${item.size.name}" not available for color "${item.colorVariant.color.name}" of product ${product.name}` 
+                    });
+                }
+
+                // Check if requested quantity is available
+                if (size.quantity < item.size.quantity) {
+                    return res.status(400).json({ 
+                        error: `Insufficient stock for size "${item.size.name}" of color "${item.colorVariant.color.name}" for product ${product.name}` 
                     });
                 }
 
@@ -51,20 +80,17 @@ const orderController = {
                     return res.status(400).json({ error: `Product ${product.name} has no valid price` });
                 }
                 
-                // Check stock across all color variants
-                let totalStock = 0;
-                for (const variant of product.colorVariants) {
-                    if (variant.sizes && Array.isArray(variant.sizes)) {
-                        totalStock += variant.sizes.reduce((sum, size) => sum + (size.quantity || 0), 0);
-                    }
-                }
-                
-                if (totalStock < item.quantity) {
-                    return res.status(400).json({ error: `Insufficient stock for product ${product.name}` });
-                }
-                
+                // Add color variant and size information to the item
+                item.colorVariant = {
+                    color: colorVariant.color,
+                    images: colorVariant.images
+                };
+                item.size = {
+                    name: size.name,
+                    quantity: item.size.quantity
+                };
                 item.price = productPrice;
-                totalAmount += productPrice * item.quantity;
+                totalAmount += productPrice * item.size.quantity;
             }
 
             // Create the order with the appropriate fields
@@ -82,7 +108,6 @@ const orderController = {
                 orderData.paymentDetails = paymentDetails;
                 
                 // For mobile payments, set payment status to 'paid' immediately
-                // since they typically make payment before confirming order
                 if (['bkash', 'nagad'].includes(paymentMethod)) {
                     orderData.paymentStatus = 'paid';
                 }
@@ -90,11 +115,22 @@ const orderController = {
 
             const order = new Order(orderData);
 
-            // Update product stock
+            // Update product stock for each color variant and size
             for (const item of items) {
-                await Product.findByIdAndUpdate(item.product, {
-                    $inc: { stock: -item.quantity }
-                });
+                await Product.findOneAndUpdate(
+                    { 
+                        _id: item.product,
+                        'colorVariants.color.name': item.colorVariant.color.name
+                    },
+                    {
+                        $inc: {
+                            'colorVariants.$.sizes.$[size].quantity': -item.size.quantity
+                        }
+                    },
+                    {
+                        arrayFilters: [{ 'size.name': item.size.name }]
+                    }
+                );
             }
 
             await order.save();

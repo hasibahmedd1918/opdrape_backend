@@ -455,6 +455,27 @@ const productController = {
     } catch (error) {
       res.status(500).json({ error: error.message });
     }
+  },
+
+  // Get products by tag (for banner displays)
+  async getProductsByTag(req, res) {
+    try {
+      const { tag } = req.params;
+      
+      if (!tag) {
+        return res.status(400).json({ error: 'Tag parameter is required' });
+      }
+      
+      // Find products that include this tag (case insensitive)
+      const products = await Product.find({ 
+        tags: { $regex: new RegExp(tag, 'i') } 
+      });
+      
+      res.json(products);
+    } catch (error) {
+      console.error('Error fetching products by tag:', error);
+      res.status(500).json({ error: error.message });
+    }
   }
 };
 

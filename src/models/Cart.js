@@ -6,19 +6,36 @@ const cartItemSchema = new mongoose.Schema({
     ref: 'Product',
     required: true
   },
-  quantity: {
-    type: Number,
-    required: true,
-    min: 1,
-    default: 1
-  },
   colorVariant: {
-    type: String,
-    required: true
+    color: {
+      name: {
+        type: String,
+        required: true
+      },
+      hexCode: {
+        type: String,
+        required: true
+      }
+    },
+    images: [{
+      url: {
+        type: String,
+        required: true
+      },
+      alt: String
+    }]
   },
   size: {
-    type: String,
-    required: true
+    name: {
+      type: String,
+      required: true,
+      enum: ['XS', 'S', 'M', 'L', 'XL', 'XXL', '3XL']
+    },
+    quantity: {
+      type: Number,
+      required: true,
+      min: 1
+    }
   },
   price: {
     type: Number,
@@ -46,8 +63,8 @@ const cartSchema = new mongoose.Schema({
 
 // Pre-save middleware to calculate totals
 cartSchema.pre('save', function(next) {
-  this.totalItems = this.items.reduce((total, item) => total + item.quantity, 0);
-  this.totalAmount = this.items.reduce((total, item) => total + (item.price * item.quantity), 0);
+  this.totalItems = this.items.reduce((total, item) => total + item.size.quantity, 0);
+  this.totalAmount = this.items.reduce((total, item) => total + (item.price * item.size.quantity), 0);
   next();
 });
 
