@@ -69,7 +69,9 @@ mongoose.connect(process.env.MONGODB_URI, {
   useUnifiedTopology: true,
 })
 .then(() => {
-  console.log('✅ Connected to MongoDB'.green);
+  if (process.env.NODE_ENV !== 'production') {
+    console.log('✅ Connected to MongoDB'.green);
+  }
 })
 .catch((err) => {
   console.error('❌ MongoDB connection error:'.red, err);
@@ -83,10 +85,12 @@ mongoose.connection.on('error', (err) => {
 // Start server
 const PORT = process.env.PORT || 8000;
 app.listen(PORT, '127.0.0.1', () => {
-  console.log(`\n🚀 Server is running on port ${PORT}`.green);
-  console.log(`📱 Frontend URL: ${process.env.FRONTEND_URL || 'http://localhost:3000'}`.cyan);
-  console.log(`🔗 API URL: http://localhost:${PORT}`.cyan);
-  console.log(`🛠️  Environment: ${process.env.NODE_ENV || 'development'}\n`.yellow);
+  if (process.env.NODE_ENV !== 'production') {
+    console.log(`\n🚀 Server is running on port ${PORT}`.green);
+    console.log(`📱 Frontend URL: ${process.env.FRONTEND_URL || 'http://localhost:3000'}`.cyan);
+    console.log(`🔗 API URL: http://localhost:${PORT}`.cyan);
+    console.log(`🛠️  Environment: ${process.env.NODE_ENV || 'development'}\n`.yellow);
+  }
 });
 
 // Handle uncaught exceptions

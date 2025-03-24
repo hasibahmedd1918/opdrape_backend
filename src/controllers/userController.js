@@ -22,43 +22,31 @@ const userController = {
   // Login user
   async login(req, res) {
     try {
-      console.log('Login attempt for:', req.body.email); // Debug log
       const { email, password } = req.body;
-      
       const user = await User.findOne({ email });
-      console.log('User found:', user ? 'Yes' : 'No'); // Debug log
-      
+
       if (!user) {
-        return res.status(401).json({ error: 'Invalid login credentials' });
+        return res.status(401).json({ error: 'Invalid credentials' });
       }
 
       const isMatch = await bcrypt.compare(password, user.password);
-      console.log('Password match:', isMatch); // Debug log
       
       if (!isMatch) {
-        return res.status(401).json({ error: 'Invalid login credentials' });
+        return res.status(401).json({ error: 'Invalid credentials' });
       }
 
-      const token = jwt.sign(
-        { userId: user._id }, 
-        process.env.JWT_SECRET,
-        { expiresIn: process.env.JWT_EXPIRE || '24h' }
-      );
-      
-      console.log('Login successful for:', user.email, 'Role:', user.role); // Debug log
-      
+      const token = generateToken(user);
       res.json({
+        token,
         user: {
-          id: user._id,
+          _id: user._id,
           name: user.name,
           email: user.email,
           role: user.role
-        },
-        token
+        }
       });
     } catch (error) {
-      console.error('Login error:', error); // Debug log
-      res.status(400).json({ error: error.message });
+      res.status(500).json({ error: error.message });
     }
   },
 

@@ -409,7 +409,6 @@ const adminController = {
 
   async createProduct(req, res) {
     try {
-      console.log("Admin creating new product...");
       const productData = req.body;
       
       // Validate colorVariants data
@@ -455,13 +454,6 @@ const adminController = {
         }
       }
       
-      console.log("Admin creating product with data:", JSON.stringify({
-        name: productData.name,
-        category: productData.category,
-        subCategory: productData.subCategory,
-        variants: productData.colorVariants.length
-      }));
-      
       const product = new Product(productData);
       
       // Set admin as creator
@@ -470,7 +462,6 @@ const adminController = {
       }
       
       await product.save();
-      console.log("Product created successfully with ID:", product._id);
       res.status(201).json(product);
     } catch (error) {
       console.error("Error creating product:", error);

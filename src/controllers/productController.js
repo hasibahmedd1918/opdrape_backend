@@ -44,7 +44,6 @@ const productController = {
   // Create new product
   async createProduct(req, res) {
     try {
-      console.log("Creating new product...");
       const productData = req.body;
       
       // Validate colorVariants data
@@ -90,13 +89,6 @@ const productController = {
         }
       }
       
-      console.log("Creating product with data:", JSON.stringify({
-        name: productData.name,
-        category: productData.category,
-        subCategory: productData.subCategory,
-        variants: productData.colorVariants.length
-      }));
-      
       const product = new Product(productData);
       
       // Set the creator if user is authenticated
@@ -105,10 +97,8 @@ const productController = {
       }
       
       await product.save();
-      console.log("Product created successfully with ID:", product._id);
       res.status(201).json(product);
     } catch (error) {
-      console.error("Error creating product:", error);
       res.status(400).json({ error: error.message });
     }
   },

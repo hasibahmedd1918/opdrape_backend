@@ -4,6 +4,11 @@ const colors = require('colors');
 colors.enable();
 
 const requestLogger = (req, res, next) => {
+    if (process.env.NODE_ENV === 'production') {
+        next();
+        return;
+    }
+
     // Generate request ID
     const requestId = Math.random().toString(36).substring(7);
     const startTime = Date.now();
@@ -73,6 +78,11 @@ const requestLogger = (req, res, next) => {
 
 // Error logger middleware
 const errorLogger = (err, req, res, next) => {
+    if (process.env.NODE_ENV === 'production') {
+        next(err);
+        return;
+    }
+
     console.log('\n━━━━━━━━━━ ERROR ━━━━━━━━━━'.red.bold);
     console.log('⌚', new Date().toISOString().gray);
     console.log('🔥', 'Error Message:'.red.bold, err.message);
