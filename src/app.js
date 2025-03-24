@@ -23,7 +23,7 @@ app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
 app.use(helmet());
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'https://opdrape.store/',
+  origin: process.env.FRONTEND_URL || 'http://localhost:3000' || 'https://opdrape.store',
   credentials: true
 }));
 
