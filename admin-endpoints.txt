@@ -40,6 +40,20 @@ GET /users
 - Description: Get all users
 - Response: Array of user objects (without passwords)
 
+DELETE /users/:userId
+- Description: Delete a user and all associated data
+- Response:
+  ```json
+  {
+    "success": true,
+    "message": "User and associated data deleted successfully"
+  }
+  ```
+- Error Responses:
+  - 404: User not found
+  - 403: Cannot delete admin users
+  - 500: Error deleting user
+
 ORDER MANAGEMENT
 ---------------
 PATCH /orders/:orderId/status

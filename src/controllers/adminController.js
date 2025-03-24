@@ -5,6 +5,9 @@ const Message = require('../models/Message');
 const Promotion = require('../models/Promotion');
 const AdminActivity = require('../models/AdminActivity');
 const Category = require('../models/Category');
+const Cart = require('../models/Cart');
+const Wishlist = require('../models/Wishlist');
+const Review = require('../models/Review');
 const mongoose = require('mongoose');
 
 const adminController = {
@@ -103,6 +106,50 @@ const adminController = {
     }
   },
 
+  async getUserOrders(req, res) {
+    try {
+      const { userId } = req.params;
+      const { page = 1, limit = 10, status } = req.query;
+      
+      // Check if user exists
+      const user = await User.findById(userId).select('_id name email');
+      if (!user) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+      
+      // Build query to filter by status if needed
+      const query = { user: userId };
+      if (status) {
+        query.status = status;
+      }
+      
+      // Get paginated orders
+      const orders = await Order.find(query)
+        .populate('items.product', 'name category subCategory')
+        .sort({ createdAt: -1 })
+        .limit(limit * 1)
+        .skip((page - 1) * limit);
+      
+      // Get total count for pagination
+      const totalOrders = await Order.countDocuments(query);
+      
+      res.json({
+        user: {
+          _id: user._id,
+          name: user.name,
+          email: user.email
+        },
+        orders,
+        totalPages: Math.ceil(totalOrders / limit),
+        currentPage: Number(page),
+        totalOrders
+      });
+    } catch (error) {
+      console.error('Error fetching user orders:', error);
+      res.status(500).json({ error: error.message });
+    }
+  },
+
   async updateUser(req, res) {
     try {
       const { userId } = req.params;
@@ -154,6 +201,63 @@ const adminController = {
     } catch (error) {
       console.error('Error updating user:', error);
       res.status(500).json({ error: error.message });
+    }
+  },
+
+  /**
+   * Delete a user
+   * @route DELETE /api/admin/users/:userId
+   * @access Private/Admin
+   */
+  async deleteUser(req, res) {
+    try {
+      const { userId } = req.params;
+
+      // Check if user exists
+      const user = await User.findById(userId);
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+
+      // Check if attempting to delete an admin
+      if (user.role === 'admin') {
+        return res.status(403).json({ 
+          message: 'Cannot delete admin users' 
+        });
+      }
+
+      // Check for related data
+      // Get user orders
+      const userOrders = await Order.find({ user: userId });
+      
+      // Delete user's orders if needed
+      if (userOrders.length > 0) {
+        await Order.deleteMany({ user: userId });
+      }
+      
+      // Delete user's cart if exists
+      await Cart.findOneAndDelete({ user: userId });
+      
+      // Delete user's wishlist if exists
+      await Wishlist.findOneAndDelete({ user: userId });
+      
+      // Delete user's reviews if any
+      await Review.deleteMany({ user: userId });
+
+      // Finally delete the user
+      await User.findByIdAndDelete(userId);
+
+      res.status(200).json({ 
+        success: true,
+        message: 'User and associated data deleted successfully' 
+      });
+      
+    } catch (error) {
+      console.error('Error in deleteUser:', error);
+      res.status(500).json({ 
+        message: 'Error deleting user', 
+        error: error.message 
+      });
     }
   },
 
@@ -234,6 +338,75 @@ const adminController = {
   },
 
   // Product Management
+  async getAllProducts(req, res) {
+    try {
+      const { page = 1, limit = 10, category, search, sort = 'newest' } = req.query;
+      
+      // Build query
+      let query = {};
+      
+      // Add category filter if provided
+      if (category) {
+        query.category = category;
+      }
+      
+      // Add search filter if provided
+      if (search) {
+        query.$or = [
+          { name: { $regex: search, $options: 'i' } },
+          { description: { $regex: search, $options: 'i' } },
+          { brand: { $regex: search, $options: 'i' } }
+        ];
+      }
+      
+      // Set up sort options
+      let sortOption = {};
+      if (sort === 'newest') {
+        sortOption = { createdAt: -1 };
+      } else if (sort === 'price-low') {
+        sortOption = { basePrice: 1 };
+      } else if (sort === 'price-high') {
+        sortOption = { basePrice: -1 };
+      } else if (sort === 'popularity') {
+        sortOption = { totalReviews: -1 };
+      }
+      
+      // Count total products matching query
+      const totalProducts = await Product.countDocuments(query);
+      
+      // Fetch products with pagination
+      const products = await Product.find(query)
+        .sort(sortOption)
+        .limit(limit * 1)
+        .skip((page - 1) * limit);
+      
+      res.json({
+        products,
+        totalPages: Math.ceil(totalProducts / limit),
+        currentPage: Number(page),
+        totalProducts
+      });
+    } catch (error) {
+      console.error('Error fetching products:', error);
+      res.status(500).json({ error: error.message });
+    }
+  },
+  
+  async getProductById(req, res) {
+    try {
+      const product = await Product.findById(req.params._id);
+      
+      if (!product) {
+        return res.status(404).json({ error: 'Product not found' });
+      }
+      
+      res.json(product);
+    } catch (error) {
+      console.error('Error fetching product:', error);
+      res.status(500).json({ error: error.message });
+    }
+  },
+
   async createProduct(req, res) {
     try {
       console.log("Admin creating new product...");
@@ -589,6 +762,317 @@ const adminController = {
         lowStockProducts
       });
     } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  },
+
+  // Review Management
+  async getAllReviews(req, res) {
+    try {
+      const { page = 1, limit = 10, rating, productId, status, sort = 'newest' } = req.query;
+      
+      // Build the aggregation pipeline
+      const pipeline = [];
+      
+      // Initial match stage for any filters
+      const matchStage = {};
+      
+      if (productId) {
+        matchStage._id = new mongoose.Types.ObjectId(productId);
+      }
+      
+      if (Object.keys(matchStage).length > 0) {
+        pipeline.push({ $match: matchStage });
+      }
+      
+      // Unwind the ratings array to create a document for each review
+      pipeline.push({ $unwind: '$ratings' });
+      
+      // Additional filtering on the unwound ratings
+      const ratingMatchStage = {};
+      
+      if (rating) {
+        ratingMatchStage['ratings.rating'] = parseInt(rating);
+      }
+      
+      if (status) {
+        ratingMatchStage['ratings.status'] = status;
+      }
+      
+      if (Object.keys(ratingMatchStage).length > 0) {
+        pipeline.push({ $match: ratingMatchStage });
+      }
+      
+      // Add lookups for product and user information
+      pipeline.push(
+        {
+          $lookup: {
+            from: 'users',
+            localField: 'ratings.user',
+            foreignField: '_id',
+            as: 'userInfo'
+          }
+        },
+        { $unwind: { path: '$userInfo', preserveNullAndEmptyArrays: true } }
+      );
+      
+      // Project only the fields we need
+      pipeline.push({
+        $project: {
+          _id: 1,
+          productId: '$_id',
+          productName: '$name',
+          reviewId: '$ratings._id',
+          user: {
+            _id: '$userInfo._id',
+            name: '$userInfo.name',
+            email: '$userInfo.email'
+          },
+          rating: '$ratings.rating',
+          review: '$ratings.review',
+          images: '$ratings.images',
+          status: { $ifNull: ['$ratings.status', 'pending'] },
+          featured: { $ifNull: ['$ratings.featured', false] },
+          adminResponse: '$ratings.adminResponse',
+          createdAt: '$ratings.createdAt'
+        }
+      });
+      
+      // Sorting
+      if (sort === 'newest') {
+        pipeline.push({ $sort: { createdAt: -1 } });
+      } else if (sort === 'oldest') {
+        pipeline.push({ $sort: { createdAt: 1 } });
+      } else if (sort === 'highest') {
+        pipeline.push({ $sort: { rating: -1 } });
+      } else if (sort === 'lowest') {
+        pipeline.push({ $sort: { rating: 1 } });
+      }
+      
+      // Count total reviews
+      const countPipeline = [...pipeline];
+      countPipeline.push({ $count: 'totalReviews' });
+      const countResult = await Product.aggregate(countPipeline);
+      const totalReviews = countResult.length > 0 ? countResult[0].totalReviews : 0;
+      
+      // Apply pagination
+      pipeline.push(
+        { $skip: (page - 1) * limit },
+        { $limit: parseInt(limit) }
+      );
+      
+      // Execute the aggregation
+      const reviews = await Product.aggregate(pipeline);
+      
+      res.json({
+        reviews,
+        totalPages: Math.ceil(totalReviews / limit),
+        currentPage: Number(page),
+        totalReviews
+      });
+    } catch (error) {
+      console.error('Error fetching reviews:', error);
+      res.status(500).json({ error: error.message });
+    }
+  },
+  
+  async getReviewById(req, res) {
+    try {
+      const { productId, reviewId } = req.params;
+      
+      const product = await Product.findById(productId)
+        .select('name');
+      
+      if (!product) {
+        return res.status(404).json({ error: 'Product not found' });
+      }
+      
+      // Use aggregation to lookup the specific review
+      const reviewData = await Product.aggregate([
+        { $match: { _id: new mongoose.Types.ObjectId(productId) } },
+        { $unwind: '$ratings' },
+        { $match: { 'ratings._id': new mongoose.Types.ObjectId(reviewId) } },
+        {
+          $lookup: {
+            from: 'users',
+            localField: 'ratings.user',
+            foreignField: '_id',
+            as: 'userInfo'
+          }
+        },
+        { $unwind: { path: '$userInfo', preserveNullAndEmptyArrays: true } },
+        {
+          $project: {
+            _id: 1,
+            productId: '$_id',
+            productName: '$name',
+            reviewId: '$ratings._id',
+            user: {
+              _id: '$userInfo._id',
+              name: '$userInfo.name',
+              email: '$userInfo.email'
+            },
+            rating: '$ratings.rating',
+            review: '$ratings.review',
+            images: '$ratings.images',
+            status: { $ifNull: ['$ratings.status', 'pending'] },
+            featured: { $ifNull: ['$ratings.featured', false] },
+            adminResponse: '$ratings.adminResponse',
+            createdAt: '$ratings.createdAt'
+          }
+        }
+      ]);
+      
+      if (reviewData.length === 0) {
+        return res.status(404).json({ error: 'Review not found' });
+      }
+      
+      res.json(reviewData[0]);
+    } catch (error) {
+      console.error('Error fetching review:', error);
+      res.status(500).json({ error: error.message });
+    }
+  },
+  
+  async updateReviewStatus(req, res) {
+    try {
+      const { productId, reviewId } = req.params;
+      const { status, featured, adminResponse } = req.body;
+      
+      // Validate status
+      if (status && !['pending', 'approved', 'rejected'].includes(status)) {
+        return res.status(400).json({ error: 'Invalid status value' });
+      }
+      
+      // Get the product
+      const product = await Product.findById(productId);
+      if (!product) {
+        return res.status(404).json({ error: 'Product not found' });
+      }
+      
+      // Find the review
+      const reviewIndex = product.ratings.findIndex(
+        r => r._id.toString() === reviewId
+      );
+      
+      if (reviewIndex === -1) {
+        return res.status(404).json({ error: 'Review not found' });
+      }
+      
+      // Prepare update
+      const updateData = {};
+      
+      if (status) {
+        updateData[`ratings.${reviewIndex}.status`] = status;
+      }
+      
+      if (featured !== undefined) {
+        updateData[`ratings.${reviewIndex}.featured`] = featured;
+      }
+      
+      if (adminResponse) {
+        updateData[`ratings.${reviewIndex}.adminResponse`] = adminResponse;
+      }
+      
+      // Apply update
+      await Product.updateOne(
+        { _id: productId },
+        { $set: updateData }
+      );
+      
+      // Get updated review
+      const updatedProduct = await Product.findById(productId);
+      const updatedReview = updatedProduct.ratings.find(
+        r => r._id.toString() === reviewId
+      );
+      
+      // Log admin activity
+      await new AdminActivity({
+        admin: req.user._id,
+        action: 'update',
+        entityType: 'review',
+        entityId: reviewId,
+        details: {
+          productId,
+          changes: req.body
+        }
+      }).save();
+      
+      res.json({
+        message: 'Review updated successfully',
+        review: updatedReview
+      });
+    } catch (error) {
+      console.error('Error updating review:', error);
+      res.status(500).json({ error: error.message });
+    }
+  },
+  
+  async deleteReview(req, res) {
+    try {
+      const { productId, reviewId } = req.params;
+      
+      // Get the product
+      const product = await Product.findById(productId);
+      if (!product) {
+        return res.status(404).json({ error: 'Product not found' });
+      }
+      
+      // Find the review
+      const reviewExists = product.ratings.some(
+        r => r._id.toString() === reviewId
+      );
+      
+      if (!reviewExists) {
+        return res.status(404).json({ error: 'Review not found' });
+      }
+      
+      // Remove the review
+      await Product.updateOne(
+        { _id: productId },
+        { $pull: { ratings: { _id: new mongoose.Types.ObjectId(reviewId) } } }
+      );
+      
+      // Recalculate average rating
+      const updatedProduct = await Product.findById(productId);
+      if (updatedProduct.ratings.length > 0) {
+        const avgRating = updatedProduct.ratings.reduce((acc, item) => acc + item.rating, 0) / updatedProduct.ratings.length;
+        await Product.updateOne(
+          { _id: productId },
+          { 
+            $set: { 
+              averageRating: avgRating,
+              totalReviews: updatedProduct.ratings.length
+            } 
+          }
+        );
+      } else {
+        // No ratings left
+        await Product.updateOne(
+          { _id: productId },
+          { 
+            $set: { 
+              averageRating: 0,
+              totalReviews: 0
+            } 
+          }
+        );
+      }
+      
+      // Log admin activity
+      await new AdminActivity({
+        admin: req.user._id,
+        action: 'delete',
+        entityType: 'review',
+        entityId: reviewId,
+        details: {
+          productId
+        }
+      }).save();
+      
+      res.json({ message: 'Review deleted successfully' });
+    } catch (error) {
+      console.error('Error deleting review:', error);
       res.status(500).json({ error: error.message });
     }
   }

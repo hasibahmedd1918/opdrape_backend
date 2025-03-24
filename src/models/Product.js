@@ -86,27 +86,43 @@ const productSchema = new mongoose.Schema({
   tags: [{
     type: String
   }],
-  ratings: [{
-    user: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User'
-    },
-    rating: {
-      type: Number,
-      required: true,
-      min: 1,
-      max: 5
-    },
-    review: String,
-    images: [{
-      url: String,
-      alt: String
-    }],
-    createdAt: {
-      type: Date,
-      default: Date.now
+  ratings: [
+    {
+      user: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: true
+      },
+      rating: {
+        type: Number,
+        required: true,
+        min: 1,
+        max: 5
+      },
+      review: {
+        type: String,
+        required: true
+      },
+      images: [String],
+      status: {
+        type: String,
+        enum: ['pending', 'approved', 'rejected'],
+        default: 'pending'
+      },
+      featured: {
+        type: Boolean,
+        default: false
+      },
+      adminResponse: {
+        type: String,
+        default: ''
+      },
+      createdAt: {
+        type: Date,
+        default: Date.now
+      }
     }
-  }],
+  ],
   averageRating: {
     type: Number,
     default: 0
