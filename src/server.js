@@ -5,6 +5,9 @@ const cors = require('cors');
 const helmet = require('helmet');
 const { requestLogger, errorLogger } = require('./middleware/requestLogger');
 
+// Set mongoose strictQuery to false to prepare for Mongoose 7
+mongoose.set('strictQuery', false);
+
 // Import routes
 const userRoutes = require('./routes/userRoutes');
 const adminRoutes = require('./routes/adminRoutes');
@@ -24,6 +27,24 @@ app.use(helmet());
 
 // Add this before your routes
 app.use(requestLogger);
+
+// Root path handler
+app.get('/', (req, res) => {
+  res.json({
+    status: 200,
+    message: 'Welcome to Opdrape API',
+    version: '1.0.0',
+    endpoints: {
+      health: '/api/health',
+      users: '/api/users',
+      admin: '/api/admin',
+      products: '/api/products',
+      orders: '/api/orders'
+    },
+    documentation: 'API documentation available at /api-docs',
+    environment: process.env.NODE_ENV || 'development'
+  });
+});
 
 // Health check route
 app.get('/api/health', (req, res) => {
@@ -64,33 +85,53 @@ app.use((err, req, res, next) => {
 });
 
 // Database connection
-mongoose.connect(process.env.MONGODB_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-})
-.then(() => {
-  if (process.env.NODE_ENV !== 'production') {
-    console.log('✅ Connected to MongoDB'.green);
+const connectDB = async () => {
+  try {
+    const conn = await mongoose.connect(process.env.MONGODB_URI, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+      serverSelectionTimeoutMS: 5000, // Timeout after 5s instead of 30s
+      socketTimeoutMS: 45000, // Close sockets after 45s of inactivity
+      family: 4 // Use IPv4, skip trying IPv6
+    });
+
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('✅ Connected to MongoDB'.green);
+    }
+  } catch (err) {
+    console.error('❌ MongoDB connection error:'.red, err);
+    // Retry connection after 5 seconds
+    setTimeout(connectDB, 5000);
   }
-})
-.catch((err) => {
-  console.error('❌ MongoDB connection error:'.red, err);
-});
+};
+
+// Initial connection
+connectDB();
 
 // Handle MongoDB connection errors
 mongoose.connection.on('error', (err) => {
   console.error('❌ MongoDB connection error:'.red, err);
+  // Attempt to reconnect
+  setTimeout(connectDB, 5000);
 });
 
-// Start server
-const PORT = process.env.PORT || 8000;
-app.listen(PORT, '127.0.0.1', () => {
-  if (process.env.NODE_ENV !== 'production') {
-    console.log(`\n🚀 Server is running on port ${PORT}`.green);
-    console.log(`📱 Frontend URL: ${process.env.FRONTEND_URL || 'http://localhost:3000'}`.cyan);
-    console.log(`🔗 API URL: http://localhost:${PORT}`.cyan);
-    console.log(`🛠️  Environment: ${process.env.NODE_ENV || 'development'}\n`.yellow);
-  }
+mongoose.connection.on('disconnected', () => {
+  console.error('❌ MongoDB disconnected. Attempting to reconnect...'.red);
+  // Attempt to reconnect
+  setTimeout(connectDB, 5000);
+});
+
+// Start server only after successful database connection
+mongoose.connection.once('open', () => {
+  const PORT = process.env.PORT || 8000;
+  app.listen(PORT, '0.0.0.0', () => {
+    if (process.env.NODE_ENV !== 'production') {
+      console.log(`\n🚀 Server is running on port ${PORT}`.green);
+      console.log(`📱 Frontend URL: ${process.env.FRONTEND_URL || 'http://localhost:3000'}`.cyan);
+      console.log(`🔗 API URL: http://localhost:${PORT}`.cyan);
+      console.log(`🛠️  Environment: ${process.env.NODE_ENV || 'development'}\n`.yellow);
+    }
+  });
 });
 
 // Handle uncaught exceptions
