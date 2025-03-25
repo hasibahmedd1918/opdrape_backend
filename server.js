@@ -16,7 +16,9 @@ const app = express();
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ limit: '10mb', extended: true }));
 app.use(cors({
-  origin: 'http://localhost:3000' || 'https://opdrape.store',
+  origin: process.env.NODE_ENV === 'production' 
+    ? 'https://opdrape.store' 
+    : 'http://localhost:3000',
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
