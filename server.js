@@ -21,7 +21,7 @@ app.use(cors({
     ? ['https://opdrape.store', 'https://www.opdrape.store']
     : 'http://localhost:3000',
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-requested-with'],
   credentials: true
 }));
 app.use(helmet());
