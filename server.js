@@ -17,12 +17,23 @@ const app = express();
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ limit: '10mb', extended: true }));
 app.use(cors({
-  origin: process.env.NODE_ENV === 'production' 
-    ? ['https://opdrape.store', 'https://www.opdrape.store']
-    : 'http://localhost:3000',
+  origin: function(origin, callback) {
+    const allowedOrigins = [
+      'https://opdrape.store',
+      'https://www.opdrape.store',
+      'http://localhost:3000'
+    ];
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.indexOf(origin) === -1) {
+      return callback(new Error('CORS policy violation'), false);
+    }
+    return callback(null, true);
+  },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'x-requested-with'],
-  credentials: true
+  credentials: true,
+  maxAge: 86400 // 24 hours
 }));
 app.use(helmet());
 
