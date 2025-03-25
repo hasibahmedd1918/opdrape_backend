@@ -5,11 +5,11 @@ const cors = require('cors');
 const helmet = require('helmet');
 
 // Import routes
-const authRoutes = require('./routes/auth');
-const productRoutes = require('./routes/products');
-const orderRoutes = require('./routes/orders');
-const userRoutes = require('./routes/users');
-const adminRoutes = require('./routes/adminRoutes');
+const authRoutes = require('./src/routes/auth');
+const productRoutes = require('./src/routes/productRoutes');
+const orderRoutes = require('./src/routes/orderRoutes');
+const userRoutes = require('./src/routes/userRoutes');
+const adminRoutes = require('./src/routes/adminRoutes');
 
 const app = express();
 
