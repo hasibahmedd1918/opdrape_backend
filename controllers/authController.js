@@ -58,7 +58,18 @@ const authController = {
         { expiresIn: process.env.JWT_EXPIRE }
       );
 
-      res.json({ token });
+      // Send success response with user data and token
+      res.json({
+        success: true,
+        token,
+        user: {
+          _id: user._id,
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          role: user.role
+        }
+      });
     } catch (error) {
       res.status(500).json({ message: 'Server error' });
     }
