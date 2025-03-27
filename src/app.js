@@ -44,7 +44,7 @@ app.use(helmet({
 app.use(cors({
   origin: function(origin, callback) {
     const allowedOrigins = [
-      'https://opdrape.store',
+      'https://opdrape.store', //check git history 
       'https://www.opdrape.store',
       'http://localhost:3000'
     ];
