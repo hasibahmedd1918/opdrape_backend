@@ -1,0 +1,311 @@
+OPDRAPE ADMIN API DOCUMENTATION
+===============================
+
+Base URL: http://localhost:8000/api/admin
+
+All endpoints require authentication with an admin token:
+```
+Headers:
+Authorization: Bearer YOUR_ADMIN_TOKEN
+```
+
+DASHBOARD
+---------
+GET /dashboard
+- Description: Get dashboard statistics
+- Response: 
+  ```json
+  {
+    "totalUsers": 100,
+    "totalOrders": 50,
+    "totalRevenue": 5000,
+    "recentOrders": [
+      {
+        "_id": "order_id",
+        "totalAmount": 150,
+        "status": "delivered",
+        "createdAt": "2024-03-14T12:00:00.000Z",
+        "user": {
+          "name": "John Doe",
+          "email": "john@example.com"
+        }
+      }
+    ]
+  }
+  ```
+
+USER MANAGEMENT
+--------------
+GET /users
+- Description: Get all users
+- Response: Array of user objects (without passwords)
+
+DELETE /users/:userId
+- Description: Delete a user and all associated data
+- Response:
+  ```json
+  {
+    "success": true,
+    "message": "User and associated data deleted successfully"
+  }
+  ```
+- Error Responses:
+  - 404: User not found
+  - 403: Cannot delete admin users
+  - 500: Error deleting user
+
+ORDER MANAGEMENT
+---------------
+PATCH /orders/:orderId/status
+- Description: Update order status
+- Request Body:
+  ```json
+  {
+    "status": "processing" // Options: "pending", "processing", "shipped", "delivered", "cancelled"
+  }
+  ```
+- Response: Updated order object
+
+PRODUCT MANAGEMENT
+-----------------
+POST /products
+- Description: Create a new product
+- Request Body:
+  ```json
+  {
+    "name": "Product Name",
+    "description": "Product description",
+    "price": 99.99,
+    "category": "category_id",
+    "stock": 100,
+    "images": [
+      {
+        "url": "image_url",
+        "alt": "Image description"
+      }
+    ],
+    "brand": "Brand Name",
+    "features": ["Feature 1", "Feature 2"],
+    "specifications": [
+      {
+        "name": "Size",
+        "value": "Medium"
+      }
+    ],
+    "isActive": true,
+    "isFeatured": false
+  }
+  ```
+- Response: Created product object
+
+PATCH /products/:productId
+- Description: Update a product
+- Request Body: Product fields to update
+- Response: Updated product object
+
+DELETE /products/:productId
+- Description: Delete a product
+- Response:
+  ```json
+  {
+    "message": "Product deleted successfully"
+  }
+  ```
+
+POST /products/bulk-update
+- Description: Update multiple products at once
+- Request Body:
+  ```json
+  {
+    "products": [
+      {
+        "_id": "product_id_1",
+        "price": 89.99,
+        "stock": 50
+      },
+      {
+        "_id": "product_id_2",
+        "price": 129.99,
+        "stock": 30
+      }
+    ]
+  }
+  ```
+- Response: Array of updated products or error messages
+
+CATEGORY MANAGEMENT
+------------------
+POST /categories
+- Description: Manage categories (create, update, delete)
+- Request Body:
+  ```json
+  {
+    "action": "create", // Options: "create", "update", "delete"
+    "category": {
+      "_id": "category_id", // Required for update and delete
+      "name": "Category Name",
+      "description": "Category description",
+      "slug": "category-name",
+      "parent": "parent_category_id", // Optional
+      "image": "image_url",
+      "isActive": true
+    }
+  }
+  ```
+- Response: Category object or success message
+
+INVENTORY MANAGEMENT
+-------------------
+PATCH /products/:productId/inventory
+- Description: Update product inventory
+- Request Body:
+  ```json
+  {
+    "stock": 150
+  }
+  ```
+- Response: Updated product object
+
+GET /products/low-stock
+- Description: Get products with low stock
+- Query Parameters:
+  - threshold: Minimum stock threshold (default: 10)
+- Response: Array of products with low stock
+
+MESSAGE MANAGEMENT
+-----------------
+GET /messages
+- Description: Get all customer messages
+- Response: Array of message objects
+
+POST /messages/:messageId/reply
+- Description: Reply to a customer message
+- Request Body:
+  ```json
+  {
+    "reply": "Your reply message"
+  }
+  ```
+- Response: Updated message object
+
+PROMOTION MANAGEMENT
+------------------
+POST /promotions
+- Description: Create a new promotion
+- Request Body:
+  ```json
+  {
+    "name": "Summer Sale",
+    "code": "SUMMER20",
+    "description": "20% off summer collection",
+    "type": "percentage", // Options: "percentage", "fixed_amount", "free_shipping", "buy_x_get_y"
+    "value": 20,
+    "startDate": "2024-06-01T00:00:00.000Z",
+    "endDate": "2024-06-30T23:59:59.000Z",
+    "minimumPurchase": 50,
+    "maximumDiscount": 100,
+    "applicableProducts": ["product_id_1", "product_id_2"],
+    "applicableCategories": ["category_id_1"],
+    "usageLimit": 1000,
+    "isActive": true
+  }
+  ```
+- Response: Created promotion object
+
+GET /promotions
+- Description: Get all promotions
+- Response: Array of promotion objects
+
+ACTIVITY LOGS
+------------
+GET /activity-logs
+- Description: Get admin activity logs
+- Response: Array of activity log objects
+
+REPORTS
+-------
+GET /reports/sales
+- Description: Get sales report
+- Query Parameters:
+  - startDate: Start date (YYYY-MM-DD)
+  - endDate: End date (YYYY-MM-DD)
+- Response:
+  ```json
+  {
+    "salesData": [
+      {
+        "_id": "2024-03-14",
+        "totalSales": 1500,
+        "orderCount": 10
+      }
+    ],
+    "dateRange": {
+      "startDate": "2024-03-01",
+      "endDate": "2024-03-31"
+    }
+  }
+  ```
+
+GET /reports/inventory
+- Description: Get inventory report
+- Response:
+  ```json
+  {
+    "inventoryData": [
+      {
+        "_id": "category_name",
+        "totalProducts": 50,
+        "totalStock": 1000,
+        "averagePrice": 79.99
+      }
+    ],
+    "lowStockProducts": [
+      {
+        "_id": "product_id",
+        "name": "Product Name",
+        "stock": 5,
+        "price": 99.99
+      }
+    ]
+  }
+  ```
+
+GET /reports/products
+- Description: Get product report
+- Query Parameters:
+  - category: Filter by category
+  - sortBy: Sort by 'sales' or 'orders'
+- Response: Product performance data
+
+GET /reports/customers
+- Description: Get customer report
+- Query Parameters:
+  - startDate: Start date (YYYY-MM-DD)
+  - endDate: End date (YYYY-MM-DD)
+- Response: Customer spending and order data
+
+GET /reports/promotions
+- Description: Get promotion report
+- Response: Promotion usage statistics
+
+GET /reports/revenue
+- Description: Get revenue report
+- Query Parameters:
+  - startDate: Start date (YYYY-MM-DD)
+  - endDate: End date (YYYY-MM-DD)
+  - groupBy: Group by 'day', 'month', or 'year'
+- Response: Revenue data grouped by time period
+
+POST /reports/export
+- Description: Export report data
+- Request Body:
+  ```json
+  {
+    "reportType": "sales", // Options: "sales", "products", "inventory", "customers", "promotions", "revenue"
+    "format": "json", // Currently only supports "json"
+    "startDate": "2024-03-01",
+    "endDate": "2024-03-31",
+    "groupBy": "day" // For time-based reports
+  }
+  ```
+- Response: Report data in the requested format 

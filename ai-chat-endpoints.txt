@@ -1,0 +1,195 @@
+AI Chat Endpoints Documentation
+================================
+
+The AI chat feature has been successfully implemented with the following endpoints:
+
+## Base URL: /api/ai
+
+### 1. Send Message to AI
+- **Endpoint**: POST /api/ai/chat
+- **Authentication**: Required (Bearer token)
+- **Description**: Send a message to the AI and receive a response
+- **Request Body**:
+  ```json
+  {
+    "message": "What are your best-selling products?",
+    "conversationHistory": [
+      {
+        "role": "user",
+        "content": "Hello"
+      },
+      {
+        "role": "assistant", 
+        "content": "Hi! How can I help you today?"
+      }
+    ]
+  }
+  ```
+- **Response**:
+  ```json
+  {
+    "success": true,
+    "data": {
+      "message": "Our best-selling products include...",
+      "timestamp": "2024-01-15T10:30:00.000Z",
+      "conversationId": "conv_64a1b2c3d4e5f6_1705312200000"
+    }
+  }
+  ```
+
+### 2. Get AI Suggestions
+- **Endpoint**: GET /api/ai/suggestions
+- **Authentication**: Required (Bearer token)
+- **Description**: Get pre-defined suggestions for common queries
+- **Response**:
+  ```json
+  {
+    "success": true,
+    "data": {
+      "suggestions": [
+        "What are your best-selling products?",
+        "How can I track my order?",
+        "What is your return policy?",
+        "Do you offer international shipping?",
+        "How can I contact customer support?",
+        "What payment methods do you accept?",
+        "How long does shipping take?",
+        "Do you have a size guide for clothing?"
+      ],
+      "timestamp": "2024-01-15T10:30:00.000Z"
+    }
+  }
+  ```
+
+### 3. AI Service Health Check
+- **Endpoint**: GET /api/ai/health
+- **Authentication**: Required (Bearer token)
+- **Description**: Check if the AI service is operational
+- **Response**:
+  ```json
+  {
+    "success": true,
+    "data": {
+      "status": "AI service is operational",
+      "timestamp": "2024-01-15T10:30:00.000Z",
+      "apiKeyConfigured": true
+    }
+  }
+  ```
+
+## Error Responses
+
+### 400 Bad Request
+```json
+{
+  "success": false,
+  "message": "Message is required and cannot be empty"
+}
+```
+
+### 401 Unauthorized
+```json
+{
+  "error": "Authentication required"
+}
+```
+
+### 429 Too Many Requests
+```json
+{
+  "success": false,
+  "message": "AI service is temporarily unavailable due to high usage. Please try again later."
+}
+```
+
+### 500 Internal Server Error
+```json
+{
+  "success": false,
+  "message": "Failed to process your message. Please try again."
+}
+```
+
+## Environment Variables Required
+
+Make sure to add the following environment variable to your .env file:
+```
+GOOGLE_GEMINI_API_KEY=your_google_gemini_api_key_here
+```
+
+## Features Implemented
+
+1. **Authentication**: All endpoints require valid JWT authentication
+2. **Input Validation**: Message length validation (1-2000 characters)
+3. **Conversation History**: Support for maintaining conversation context
+4. **Error Handling**: Comprehensive error handling for API failures
+5. **Rate Limiting**: Built-in handling for API quota limits
+6. **Health Monitoring**: Endpoint to check AI service status
+7. **Suggestions**: Pre-defined common queries for better UX
+
+## Usage Examples
+
+### Frontend Integration Example (JavaScript)
+```javascript
+// Send a message to AI
+const sendMessageToAI = async (message, conversationHistory = []) => {
+  try {
+    const response = await fetch('/api/ai/chat', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${userToken}`
+      },
+      body: JSON.stringify({
+        message,
+        conversationHistory
+      })
+    });
+    
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('AI Chat Error:', error);
+    throw error;
+  }
+};
+
+// Get suggestions
+const getAISuggestions = async () => {
+  try {
+    const response = await fetch('/api/ai/suggestions', {
+      headers: {
+        'Authorization': `Bearer ${userToken}`
+      }
+    });
+    
+    const data = await response.json();
+    return data.data.suggestions;
+  } catch (error) {
+    console.error('Error getting suggestions:', error);
+    throw error;
+  }
+};
+```
+
+## Security Features
+
+1. **Authentication Required**: All endpoints require valid JWT tokens
+2. **Input Sanitization**: Messages are trimmed and validated
+3. **Rate Limiting**: Built-in handling for API quota limits
+4. **Error Masking**: Sensitive API errors are masked from users
+5. **CORS Protection**: Follows existing CORS configuration
+
+## Dependencies Added
+
+- `@google/generative-ai`: Official Google Gemini AI SDK
+
+## Files Created/Modified
+
+1. **Created**: `src/controllers/aiController.js` - AI chat controller
+2. **Created**: `src/routes/aiRoutes.js` - AI chat routes
+3. **Modified**: `src/server.js` - Added AI routes
+4. **Modified**: `src/app.js` - Added AI routes
+5. **Modified**: `package.json` - Added Google Generative AI dependency
+
+The AI chat feature is now fully integrated and ready to use!

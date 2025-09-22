@@ -1,0 +1,216 @@
+OPDRAPE REPORT API DOCUMENTATION
+================================
+
+Base URL: http://localhost:8000/api/admin
+
+All endpoints require authentication with an admin token:
+```
+Headers:
+Authorization: Bearer YOUR_ADMIN_TOKEN
+```
+
+SALES REPORT
+-----------
+GET /reports/sales
+- Description: Get sales report with order statistics
+- Query Parameters:
+  - startDate: Start date (YYYY-MM-DD)
+  - endDate: End date (YYYY-MM-DD)
+  - groupBy: Group results by 'day', 'month', or 'year' (default: 'day')
+- Response:
+  ```json
+  {
+    "salesData": [
+      {
+        "_id": "2024-03-14",
+        "totalSales": 15000,
+        "orderCount": 50,
+        "averageOrderValue": 300
+      }
+    ],
+    "topProducts": [
+      {
+        "productDetails": {
+          "name": "Product Name",
+          "category": "Category"
+        },
+        "totalQuantity": 100,
+        "totalRevenue": 5000
+      }
+    ],
+    "dateRange": {
+      "startDate": "2024-03-01",
+      "endDate": "2024-03-31"
+    },
+    "groupBy": "day"
+  }
+  ```
+
+PRODUCT REPORT
+-------------
+GET /reports/products
+- Description: Get product performance report
+- Query Parameters:
+  - category: Filter by category
+  - sortBy: Sort by 'sales' or 'orders' (default: 'sales')
+- Response:
+  ```json
+  {
+    "products": [
+      {
+        "name": "Product Name",
+        "category": "Category",
+        "price": 99.99,
+        "stock": 50,
+        "totalSales": 5000,
+        "totalOrders": 100
+      }
+    ],
+    "totalProducts": 50,
+    "filters": {
+      "category": "electronics",
+      "sortBy": "sales"
+    }
+  }
+  ```
+
+INVENTORY REPORT
+--------------
+GET /reports/inventory
+- Description: Get inventory status report
+- Response:
+  ```json
+  {
+    "categoryStats": [
+      {
+        "_id": "Category",
+        "totalProducts": 100,
+        "totalStock": 1000,
+        "averagePrice": 49.99,
+        "lowStock": 5
+      }
+    ],
+    "lowStockProducts": [
+      {
+        "name": "Product Name",
+        "category": "Category",
+        "stock": 5,
+        "price": 99.99
+      }
+    ],
+    "totalCategories": 10
+  }
+  ```
+
+CUSTOMER REPORT
+-------------
+GET /reports/customers
+- Description: Get customer spending and behavior report
+- Query Parameters:
+  - startDate: Start date (YYYY-MM-DD)
+  - endDate: End date (YYYY-MM-DD)
+- Response:
+  ```json
+  {
+    "customers": [
+      {
+        "firstName": "John",
+        "lastName": "Doe",
+        "email": "john@example.com",
+        "totalOrders": 5,
+        "totalSpent": 500,
+        "averageOrderValue": 100
+      }
+    ],
+    "totalCustomers": 50,
+    "dateRange": {
+      "startDate": "2024-03-01",
+      "endDate": "2024-03-31"
+    }
+  }
+  ```
+
+PROMOTION REPORT
+--------------
+GET /reports/promotions
+- Description: Get promotion usage and effectiveness report
+- Response:
+  ```json
+  {
+    "promotions": [
+      {
+        "name": "Summer Sale",
+        "code": "SUMMER20",
+        "type": "percentage",
+        "value": 20,
+        "usageCount": 150,
+        "totalDiscount": 3000,
+        "averageDiscount": 20,
+        "startDate": "2024-06-01T00:00:00.000Z",
+        "endDate": "2024-06-30T23:59:59.000Z",
+        "isActive": true
+      }
+    ],
+    "totalPromotions": 10,
+    "totalUsage": 500,
+    "totalDiscount": 10000
+  }
+  ```
+
+REVENUE REPORT
+------------
+GET /reports/revenue
+- Description: Get detailed revenue analysis
+- Query Parameters:
+  - startDate: Start date (YYYY-MM-DD)
+  - endDate: End date (YYYY-MM-DD)
+  - groupBy: Group by 'day', 'month', or 'year' (default: 'day')
+- Response:
+  ```json
+  {
+    "revenueData": [
+      {
+        "_id": "2024-03-14",
+        "totalRevenue": 15000,
+        "orderCount": 50,
+        "totalDiscount": 2000,
+        "netRevenue": 13000
+      }
+    ],
+    "summary": {
+      "totalRevenue": 150000,
+      "totalOrders": 500,
+      "totalDiscount": 20000,
+      "netRevenue": 130000,
+      "averageOrderValue": 300
+    },
+    "dateRange": {
+      "startDate": "2024-03-01",
+      "endDate": "2024-03-31"
+    },
+    "groupBy": "day"
+  }
+  ```
+
+EXPORT REPORT
+-----------
+POST /reports/export
+- Description: Export report data in specified format
+- Request Body:
+  ```json
+  {
+    "reportType": "sales", // Required: "sales", "products", "inventory", "customers", "promotions", "revenue"
+    "format": "json",      // Optional: currently only supports "json"
+    "startDate": "2024-03-01", // Optional: depends on report type
+    "endDate": "2024-03-31",   // Optional: depends on report type
+    "groupBy": "month",        // Optional: for time-based reports
+    "category": "electronics"  // Optional: for product reports
+  }
+  ```
+- Response: Report data in the requested format
+
+Note: All responses include appropriate HTTP status codes:
+- 200: Successful request
+- 400: Bad request (invalid parameters)
+- 401: Unauthorized
+- 500: Server error 
